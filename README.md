@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/hero.svg" alt="Dhruv Honwad, Full stack developer" width="100%"/>
+  <img src="assets/hero.svg" alt="Dhruv Honwad, Full Stack AI Engineer" width="100%"/>
 </p>
 
 I build full-stack products with LLMs and retrieval at the core: React and FastAPI up front, RAG pipelines and computer vision behind them.
@@ -36,7 +36,7 @@ AI Engineer Intern at **Larsen & Toubro**, where I built an AR web app that dete
 
 <img src="https://skillicons.dev/icons?i=py,c,cpp,js,ts,html,css,react,nextjs,nodejs,fastapi,tailwind,firebase,mongodb,mysql,aws,vercel,threejs,git,github&perline=10&theme=dark" alt="Tech stack"/>
 
-**AI:** LLM integration, RAG (including vectorless), MCP servers, computer vision (YOLOv11), XGBoost on AWS SageMaker
+**AI / ML:** LLM application development · Retrieval-augmented generation (vector and vectorless) · Model Context Protocol (MCP) servers · Computer vision (YOLOv11) · Model training and deployment on AWS SageMaker (XGBoost)
 
 ### Activity
 

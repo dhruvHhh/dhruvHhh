@@ -158,7 +158,7 @@ def build(cal):
     legend.append(f'<text x="{cx - 2}" y="{ly}" text-anchor="end" font-size="12" fill="{MUTED}">Less</text>')
 
     total_txt = f"{total:,}"
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" role="img" aria-label="{total_txt} contributions in the last year">
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" role="img" aria-label="{total_txt} public contributions in the last year">
   <style>
     {font_css()}
     text {{ font-family: {FONT_STACK}; }}
@@ -172,7 +172,7 @@ def build(cal):
   </defs>
   <rect width="{W}" height="{H}" rx="12" fill="{VOID}"/>
   <rect x=".5" y=".5" width="{W-1}" height="{H-1}" rx="11.5" fill="none" stroke="{LINE}"/>
-  <text x="{x0}" y="46" font-size="16"><tspan font-weight="600" fill="{TEXT}">{total_txt}</tspan><tspan fill="{MUTED}"> contributions in the last year</tspan></text>
+  <text x="{x0}" y="46" font-size="16"><tspan font-weight="600" fill="{TEXT}">{total_txt}</tspan><tspan fill="{MUTED}"> public contributions in the last year</tspan></text>
   {''.join(legend)}
   {''.join(labels)}
   {''.join(stars)}

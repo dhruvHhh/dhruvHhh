@@ -22,7 +22,7 @@ import textwrap
 # ----------------------------------------------------------------------------
 
 NAME = "Dhruv Honwad"
-TITLE = "Full stack developer"
+TITLE = "Full Stack AI Engineer"
 TAGLINE = "React, FastAPI and RAG systems. SIH 2025 Grand Finalist."
 
 # Accent colours cycle across project cards (Vercel's brand set).
