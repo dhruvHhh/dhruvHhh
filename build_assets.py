@@ -25,8 +25,8 @@ NAME = "Dhruv Honwad"
 TITLE = "Full Stack AI Engineer"
 TAGLINE = "React, FastAPI and RAG systems. SIH 2025 Grand Finalist."
 
-# Accent colours cycle across project cards (Vercel's brand set).
-ACCENTS = ["#0070f3", "#ff0080", "#50e3c2", "#7928ca", "#f5a623"]
+# One accent colour per project card, in PROJECTS order (Vercel's brand set).
+ACCENTS = ["#0070f3", "#ee0000", "#7928ca", "#50e3c2", "#ff0080", "#f5a623"]
 
 # If the number of projects is odd, the last card is drawn full width.
 PROJECTS = [
@@ -40,21 +40,12 @@ PROJECTS = [
         "live": False,
     },
     {
-        "slug": "prepview",
-        "kind": "AI platform",
-        "title": "PrepView",
-        "desc": "Proctored mock interviews with video answers and AI scoring, a coding round, and an ATS resume analyzer.",
-        "tags": ["React", "TypeScript", "Node.js", "Gemini", "Deepgram"],
-        "url": "https://github.com/dhruvHhh/PrepView",
-        "live": False,
-    },
-    {
-        "slug": "news",
-        "kind": "SIH 2025 mobile app",
-        "title": "N.E.W.S",
-        "desc": "Offline-first health reports with live maps, a Gemini medical assistant and 12 regional languages.",
-        "tags": ["React Native", "Expo", "Node.js", "Firebase"],
-        "url": "https://github.com/dhruvHhh/sih2025",
+        "slug": "tripwire",
+        "kind": "Chrome extension",
+        "title": "Tripwire",
+        "desc": "Flags risky links on any page and warns before a dangerous one opens. Every check runs locally.",
+        "tags": ["JavaScript", "Manifest V3", "HTML", "CSS"],
+        "url": "https://github.com/dhruvHhh/tripwire",
         "live": False,
     },
     {
@@ -67,11 +58,29 @@ PROJECTS = [
         "live": True,
     },
     {
+        "slug": "news",
+        "kind": "SIH 2025 mobile app",
+        "title": "N.E.W.S",
+        "desc": "Offline-first health reports with live maps, a Gemini medical assistant and 12 regional languages.",
+        "tags": ["React Native", "Expo", "Node.js", "Firebase"],
+        "url": "https://github.com/dhruvHhh/sih2025",
+        "live": False,
+    },
+    {
+        "slug": "prepview",
+        "kind": "AI platform",
+        "title": "PrepView",
+        "desc": "Proctored mock interviews with video answers and AI scoring, a coding round, and an ATS resume analyzer.",
+        "tags": ["React", "TypeScript", "Node.js", "Gemini", "Deepgram"],
+        "url": "https://github.com/dhruvHhh/PrepView",
+        "live": False,
+    },
+    {
         # No public repo yet. Set "url" to link it, or leave None for an unlinked card.
         "slug": "now-ai",
         "kind": "Amazon HackOn",
         "title": "Now AI",
-        "desc": "AI-native quick-commerce assistant. XGBoost predicts 30-day reorders (1.1-day MAE), and an Alexa skill on AWS Lambda takes voice orders into a Bedrock-powered cart.",
+        "desc": "Quick-commerce assistant. XGBoost predicts reorders (1.1-day MAE) and an Alexa skill takes voice orders.",
         "tags": ["Python", "SageMaker", "XGBoost", "Lambda", "Alexa"],
         "url": None,
         "live": False,
