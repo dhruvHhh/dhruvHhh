@@ -71,7 +71,7 @@ PROJECTS = [
         "kind": "Stroke rehab",
         "title": "Rehabit",
         "desc": "An ESP32 touch board turns daily hand rehab for stroke survivors into games, with an AI voice companion.",
-        "tags": ["ESP32", "C++", "FastAPI", "React", "ElevenLabs"],
+        "tags": ["ESP32", "C++", "FastAPI", "React", "Sarvam"],
         "url": "https://github.com/suryansh04/rehabit",
         "live": False,
     },
