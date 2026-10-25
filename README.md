@@ -22,12 +22,12 @@ AI Engineer Intern at **Larsen & Toubro**, where I built an AR web app that dete
       <a href="https://github.com/dhruvHhh/starfall-race"><img src="assets/cards/starfall-race.svg" alt="starfall" width="100%"/></a>
     </td>
     <td width="50%">
-      <a href="https://github.com/dhruvHhh/sih2025"><img src="assets/cards/news.svg" alt="N.E.W.S" width="100%"/></a>
+      <a href="https://github.com/suryansh04/sunskip"><img src="assets/cards/sunskip.svg" alt="SunSkip" width="100%"/></a>
     </td>
   </tr>
   <tr>
     <td width="50%">
-      <a href="https://github.com/dhruvHhh/PrepView"><img src="assets/cards/prepview.svg" alt="PrepView" width="100%"/></a>
+      <a href="https://github.com/suryansh04/rehabit"><img src="assets/cards/rehabit.svg" alt="Rehabit" width="100%"/></a>
     </td>
     <td width="50%">
       <img src="assets/cards/now-ai.svg" alt="Now AI" width="100%"/>
