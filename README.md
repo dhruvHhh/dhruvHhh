@@ -2,11 +2,13 @@
   <img src="assets/hero.svg" alt="Dhruv Honwad, Full Stack AI Engineer" width="100%"/>
 </p>
 
-I build full-stack products with LLMs and retrieval at the core: React and FastAPI up front, RAG pipelines and computer vision behind them.
+I like building with AI and LLMs.
 
-AI Engineer Intern at **Larsen & Toubro**, where I built an AR web app that detects objects with YOLOv11x and overlays live labels using Three.js and WebXR. Final-year Computer & Communication Engineering student at Manipal University Jaipur (CGPA 8.81). **SIH 2025 Grand Finalist** among 68,000+ teams, co-inventor on a published patent, and three-time Dean's List.
+- **At Larsen & Toubro**, as an AI Engineer Intern, I built an AR web app that detects objects with YOLOv11x and overlays live labels using Three.js and WebXR.
+- **At Manipal University Jaipur**, I'm a final-year Computer & Communication Engineering student.
+- **Along the way:** **SIH 2025 Grand Finalist** among 68,000+ teams, and co-inventor on a published patent.
 
-### Selected work
+<img src="assets/headers/built.svg" alt="Things I've built" width="100%"/>
 
 <table>
   <tr>
@@ -35,14 +37,14 @@ AI Engineer Intern at **Larsen & Toubro**, where I built an AR web app that dete
   </tr>
 </table>
 
-### Stack
+<img src="assets/headers/toolbox.svg" alt="My toolbox" width="100%"/>
 
 <img src="https://skillicons.dev/icons?i=py,c,cpp,js,ts,html,css,react,nextjs,nodejs,fastapi,tailwind,firebase,mongodb,mysql,aws,vercel,threejs,git,github&perline=10&theme=dark" alt="Tech stack"/>
 
 **AI / ML:** LLM application development · Retrieval-augmented generation (vector and vectorless) · Model Context Protocol (MCP) servers · Computer vision (YOLOv11) · Model training and deployment on AWS SageMaker (XGBoost)
 
-### Activity
+<img src="assets/headers/activity.svg" alt="What I've been up to" width="100%"/>
 
-<img src="https://raw.githubusercontent.com/dhruvHhh/dhruvHhh/output/activity.svg" alt="Contribution star map" width="100%"/>
+<img src="https://raw.githubusercontent.com/dhruvHhh/dhruvHhh/output/activity.svg" alt="Public contributions in the last year" width="100%"/>
 
-[dhruvhonwad@gmail.com](mailto:dhruvhonwad@gmail.com) · [LinkedIn](https://www.linkedin.com/in/dhruv-honwad)
+**Say hi:** [dhruvhonwad@gmail.com](mailto:dhruvhonwad@gmail.com) · [LinkedIn](https://www.linkedin.com/in/dhruv-honwad)

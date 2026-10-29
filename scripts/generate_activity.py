@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Renders a "star map" of the last year of GitHub contributions.
-Each day is a star; busier days are bigger and brighter.
+Renders the last year of public GitHub contributions as a doodled calendar,
+in the same sketchbook style as the rest of the profile (see doodle.py).
+Each day is a hand-drawn mark; busier days get bigger marks and the busiest get a star.
 
 Usage:
     python generate_activity.py calendar.json out.svg
@@ -11,42 +12,17 @@ calendar.json is the raw output of the GitHub GraphQL query used in
 Standard library only.
 """
 
-import base64
 import json
-import math
 import os
-import random
 import sys
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-FONT_DIR = os.path.join(HERE, "..", "fonts")
-
-VOID = "#000000"
-LINE = "#262626"
-TEXT = "#ededed"
-MUTED = "#a1a1a1"
-BLUE = "#0070f3"
-FONT_STACK = "Geist, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
+from doodle import BORDER, INK, MINT, MUTED, YELLOW, Pen, paper, path, style_block
 
 MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 
-def font_css():
-    faces = []
-    for weight, fname in ((400, "Geist-Regular.subset.woff2"), (600, "Geist-SemiBold.subset.woff2")):
-        path = os.path.join(FONT_DIR, fname)
-        if not os.path.exists(path):
-            return ""
-        b64 = base64.b64encode(open(path, "rb").read()).decode()
-        faces.append(
-            "@font-face{font-family:'Geist';font-weight:%d;font-style:normal;"
-            "src:url(data:font/woff2;base64,%s) format('woff2');}" % (weight, b64)
-        )
-    return "".join(faces)
-
-
-def load_calendar(path):
-    raw = json.load(open(path, encoding="utf-8"))
+def load_calendar(path_):
+    raw = json.load(open(path_, encoding="utf-8"))
     return raw["data"]["user"]["contributionsCollection"]["contributionCalendar"]
 
 
@@ -71,14 +47,23 @@ def level_of(c, t):
     return 4
 
 
-# star look per level: (radius, fill)
-STAR = {
-    0: (1.2, "#2a2a2a"),
-    1: (2.0, "#6b6b6b"),
-    2: (2.8, "#a1a1a1"),
-    3: (3.4, "#ededed"),
-    4: (3.8, "#ffffff"),
-}
+def mark(lv, cx, cy, seed):
+    """One day's doodle. Seeded by date, so a day keeps its shape between runs."""
+    pen = Pen(seed)
+    if lv == 0:
+        return f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="1.3" fill="{BORDER}"/>'
+    if lv == 1:
+        return path(pen.circle(cx, cy, 3.4, wob=0.08, n=6), fill="none", stroke=MINT, stroke_opacity=".75",
+                    stroke_width="1.5", stroke_linecap="round")
+    if lv == 2:
+        return path(pen.blob(cx, cy, 4.4, var=0.14, n=6), fill=MINT, fill_opacity=".7")
+    if lv == 3:
+        return path(pen.blob(cx, cy, 6, var=0.12, n=7), fill=MINT)
+    return (
+        f'<g class="tw" style="animation-delay:{pen.r.uniform(0, 3.6):.1f}s">'
+        + path(pen.star(cx, cy, 8.2), fill=YELLOW, stroke=YELLOW, stroke_width="1.4", stroke_linejoin="round")
+        + "</g>"
+    )
 
 
 def build(cal):
@@ -86,18 +71,17 @@ def build(cal):
     total = cal["totalContributions"]
     n = len(weeks)
 
-    W, H = 1000, 236
-    x0, x1 = 40, 960
-    y0 = 92
+    W, H = 1000, 262
+    x0, x1 = 44, 956
+    y0 = 108
     pitch = (x1 - x0) / n
+    pen = Pen("activity")
 
     counts = [d["contributionCount"] for w in weeks for d in w["contributionDays"]]
     th = level_thresholds(counts)
 
-    stars, labels = [], []
-
     # month labels: one per month change; drop a label if the next one is under 3 columns away
-    cands, last_month = [], None
+    labels, cands, last_month = [], [], None
     for wi, week in enumerate(weeks):
         if not week["contributionDays"]:
             continue
@@ -110,74 +94,41 @@ def build(cal):
         if (nxt is not None and nxt - wi < 3) or wi >= n - 2:
             continue
         labels.append(
-            f'<text x="{x0 + wi * pitch:.1f}" y="76" font-size="11" fill="{MUTED}">{MONTHS[month]}</text>'
+            f'<text x="{x0 + wi * pitch:.1f}" y="94" font-size="12" fill="{MUTED}">{MONTHS[month]}</text>'
         )
 
+    marks = []
     for wi, week in enumerate(weeks):
-        days = week["contributionDays"]
-        if not days:
-            continue
-
-        for d in days:
-            lv = level_of(d["contributionCount"], th)
-            r, fill = STAR[lv]
+        for d in week["contributionDays"]:
             cx = x0 + wi * pitch + pitch / 2
             cy = y0 + d["weekday"] * pitch + pitch / 2
-            rnd = random.Random(d["date"])
-            tw = ""
-            if lv >= 3:
-                dur, delay = rnd.uniform(3.5, 7), rnd.uniform(0, 6)
-                tw = f' class="tw" style="animation-duration:{dur:.1f}s;animation-delay:{delay:.1f}s"'
+            marks.append(mark(level_of(d["contributionCount"], th), cx, cy, d["date"]))
 
-            if lv == 4:
-                stars.append(
-                    f'<g{tw}>'
-                    f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="15" fill="url(#glow4)"/>'
-                    f'<path d="M{cx-9:.1f} {cy:.1f}H{cx+9:.1f}M{cx:.1f} {cy-9:.1f}V{cy+9:.1f}" stroke="#fff" stroke-opacity=".55" stroke-width="1" stroke-linecap="round"/>'
-                    f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r}" fill="{fill}"/>'
-                    f'</g>'
-                )
-            elif lv == 3:
-                stars.append(
-                    f'<g{tw}>'
-                    f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="10" fill="url(#glow3)"/>'
-                    f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r}" fill="{fill}"/>'
-                    f'</g>'
-                )
-            else:
-                stars.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r}" fill="{fill}"/>')
-
-    # legend (right aligned)
-    ly = 46
-    legend = [f'<text x="{x1}" y="{ly}" text-anchor="end" font-size="12" fill="{MUTED}">More</text>']
-    cx = x1 - 38
+    # legend (right aligned): less . o ● ● ★ more
+    ly = 50
+    legend = [f'<text x="{x1}" y="{ly + 4}" text-anchor="end" font-size="12" fill="{MUTED}">more</text>']
+    cx = x1 - 50
     for lv in (4, 3, 2, 1, 0):
-        r, fill = STAR[lv]
-        legend.append(f'<circle cx="{cx}" cy="{ly-4}" r="{max(r, 1.6)}" fill="{fill}"/>')
-        cx -= 16
-    legend.append(f'<text x="{cx - 2}" y="{ly}" text-anchor="end" font-size="12" fill="{MUTED}">Less</text>')
+        legend.append(mark(lv, cx, ly, f"legend-{lv}"))
+        cx -= 22
+    legend.append(f'<text x="{cx + 6}" y="{ly + 4}" text-anchor="end" font-size="12" fill="{MUTED}">less</text>')
 
     total_txt = f"{total:,}"
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" role="img" aria-label="{total_txt} public contributions in the last year">
-  <style>
-    {font_css()}
-    text {{ font-family: {FONT_STACK}; }}
-    .tw {{ animation: tw ease-in-out infinite; }}
-    @keyframes tw {{ 0%,100% {{ opacity: 1; }} 50% {{ opacity: .45; }} }}
-    @media (prefers-reduced-motion: reduce) {{ .tw {{ animation: none; }} }}
-  </style>
-  <defs>
-    <radialGradient id="glow3"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
-    <radialGradient id="glow4"><stop offset="0" stop-color="{BLUE}" stop-opacity=".65"/><stop offset=".5" stop-color="{BLUE}" stop-opacity=".18"/><stop offset="1" stop-color="{BLUE}" stop-opacity="0"/></radialGradient>
-  </defs>
-  <rect width="{W}" height="{H}" rx="12" fill="{VOID}"/>
-  <rect x=".5" y=".5" width="{W-1}" height="{H-1}" rx="11.5" fill="none" stroke="{LINE}"/>
-  <text x="{x0}" y="46" font-size="16"><tspan font-weight="600" fill="{TEXT}">{total_txt}</tspan><tspan fill="{MUTED}"> public contributions in the last year</tspan></text>
-  {''.join(legend)}
-  {''.join(labels)}
-  {''.join(stars)}
-</svg>
-"""
+    num_w = len(total_txt) * 20
+    title = (
+        f'<text x="{x0}" y="60" font-size="34" font-weight="600" fill="{INK}">{total_txt}</text>'
+        + path(pen.squiggle(x0 + 1, x0 + num_w, 72, amp=2.2, step=8), fill="none", stroke=MINT,
+               stroke_width="2.6", stroke_linecap="round")
+        + f'<text x="{x0 + num_w + 14}" y="58" font-size="16" fill="{MUTED}">public contributions in the last year</text>'
+    )
+
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" '
+        f'role="img" aria-label="{total_txt} public contributions in the last year">'
+        + style_block() + paper(W, H, "activity-page")
+        + '<g clip-path="url(#page)">' + title + "".join(legend) + "".join(labels) + "".join(marks)
+        + "</g></svg>\n"
+    )
 
 
 def main():

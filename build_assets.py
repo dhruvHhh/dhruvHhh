@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """
-Generates the hero banner and project cards for a GitHub profile README.
-Theme: deep space in Vercel's neutral palette, with Geist embedded in each SVG.
+Generates the banner, project cards and section headers for a GitHub profile README.
+The banner artwork is a finished image (assets/hero.png); hero.svg wraps it and adds
+animated steam over the mug. GitHub only animates SVGs, and an SVG shown as an image
+cannot load other files, so the PNG is embedded.
+Theme: a dark sketchbook with hand-drawn doodles and pastel marker blobs, set in Poppins.
+The shared drawing helpers live in scripts/doodle.py.
 
 Usage:
     1. Edit the CONFIG block below.
@@ -12,23 +16,24 @@ Standard library only.
 """
 
 import base64
-import html
 import os
-import random
+import sys
 import textwrap
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "scripts"))
+from doodle import (  # noqa: E402
+    BORDER, CORAL, INK, LAVENDER, MINT, MUTED, PEACH, PILL, SKY, YELLOW,
+    Pen, esc, inked, paper, path, sparkle, style_block, text_width,
+)
 
 # ----------------------------------------------------------------------------
 # CONFIG - edit this part
 # ----------------------------------------------------------------------------
 
-NAME = "Dhruv Honwad"
-TITLE = "Full Stack AI Engineer"
-TAGLINE = "React, FastAPI and RAG systems. SIH 2025 Grand Finalist."
+# One pastel per project card, in PROJECTS order.
+ACCENTS = [MINT, CORAL, LAVENDER, YELLOW, PEACH, SKY]
 
-# One accent colour per project card, in PROJECTS order (Vercel's brand set).
-ACCENTS = ["#0070f3", "#ee0000", "#7928ca", "#50e3c2", "#ff0080", "#f5a623"]
-
-# If the number of projects is odd, the last card is drawn full width.
+# Each project's "slug" also picks its doodle (see DOODLES below).
 PROJECTS = [
     {
         "slug": "regtree",
@@ -87,252 +92,286 @@ PROJECTS = [
     },
 ]
 
-# ----------------------------------------------------------------------------
-# Tokens (Vercel neutrals)
-# ----------------------------------------------------------------------------
-
-VOID = "#000000"
-LINE = "#262626"
-LINE_SOFT = "#1a1a1a"
-TEXT = "#ededed"
-MUTED = "#a1a1a1"
-GREEN = "#50e3c2"
+# Section headers drawn in the same style: (file name, text, pastel).
+HEADERS = [
+    ("built", "Things I've built", MINT),
+    ("toolbox", "My toolbox", YELLOW),
+    ("activity", "What I've been up to", LAVENDER),
+]
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR = os.path.join(HERE, "assets")
-FONT_DIR = os.path.join(HERE, "fonts")
-
-FONT_STACK = "Geist, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
 
 
-def esc(s):
-    return html.escape(s, quote=True)
+def svg_open(w, h, label):
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" '
+        f'role="img" aria-label="{esc(label)}">'
+    )
 
 
-def font_css():
-    """Embed the subset Geist files so the SVG renders the same everywhere."""
-    faces = []
-    for weight, fname in ((400, "Geist-Regular.subset.woff2"), (600, "Geist-SemiBold.subset.woff2")):
-        path = os.path.join(FONT_DIR, fname)
-        if not os.path.exists(path):
-            return ""  # falls back to system fonts
-        b64 = base64.b64encode(open(path, "rb").read()).decode()
-        faces.append(
-            "@font-face{font-family:'Geist';font-weight:%d;font-style:normal;"
-            "src:url(data:font/woff2;base64,%s) format('woff2');}" % (weight, b64)
+# ----------------------------------------------------------------------------
+# Doodles: each draws into a 150 x 150 box and returns (art, blobs)
+# ----------------------------------------------------------------------------
+
+def d_regtree(pen, c):
+    a = [
+        path(pen.curve([(75, 142), (74, 122), (76, 100), (75, 78)])),
+        path(pen.curve([(75, 114), (58, 102), (44, 90)])),
+        path(pen.curve([(75, 100), (93, 89), (106, 76)])),
+        path(pen.line(75, 78, 75, 60)),
+        path(pen.curve([(42, 143), (75, 141), (110, 144)])),
+    ]
+    for x, y, rot in ((23, 57, -8), (99, 43, 7), (62, 22, -2)):
+        w, h, f = 26, 32, 8
+        a.append(
+            f'<g transform="rotate({rot} {x + w / 2} {y + h / 2})">'
+            + path(pen.poly([(x, y), (x + w - f, y), (x + w, y + f), (x + w, y + h), (x, y + h)]))
+            + path(pen.poly([(x + w - f, y), (x + w - f, y + f), (x + w, y + f)], closed=False))
+            + path(pen.line(x + 6, y + 15, x + w - 6, y + 15, 0.4))
+            + path(pen.line(x + 6, y + 22, x + w - 10, y + 22, 0.4))
+            + "</g>"
         )
-    return "".join(faces)
+    a.append(path(sparkle(132, 22, 7), stroke_width="2"))
+    a.append(path(sparkle(18, 30, 4.5), stroke_width="1.8"))
+    return "".join(a), [(pen.blob(80, 46, 33), c), (pen.blob(26, 116, 12), c)]
 
 
-FONTS = font_css()
+def d_tripwire(pen, c):
+    a = [
+        path(pen.line(22, 62, 22, 140)), path(pen.line(128, 62, 128, 140)),
+        path(pen.line(14, 140, 30, 140)), path(pen.line(120, 140, 136, 140)),
+        path(pen.curve([(22, 74), (50, 86), (75, 90), (100, 86), (128, 74)])),
+        path(pen.line(75, 90, 75, 97, 0.3)),
+        path("M62 117Q62 98 75 97Q88 98 88 117Z"),
+        path(pen.line(58, 117, 92, 117, 0.5)),
+        f'<circle cx="75" cy="122" r="3.2" fill="currentColor" stroke="none"/>',
+        path(pen.curve([(96, 100), (100, 107), (96, 114)])),
+        path(pen.curve([(103, 96), (109, 107), (103, 118)])),
+        path(pen.circle(112, 32, 14)),
+        path(pen.line(112, 24, 112, 33, 0.3)),
+        f'<circle cx="112" cy="39.5" r="2.2" fill="currentColor" stroke="none"/>',
+    ]
+    tx, ty = 38, 80
+    ptr = [(0, 0), (0, 25), (6, 19), (11, 30), (15, 28), (10, 17), (18, 17)]
+    a.append(path(pen.poly([(tx + x, ty + y) for x, y in ptr], wob=0.3)))
+    return "".join(a), [(pen.blob(77, 110, 21), c), (pen.blob(112, 32, 17, var=0.08), c)]
+
+
+def d_starfall(pen, c):
+    a = []
+    for x, ch in ((10, "W"), (52, "P"), (94, "M")):
+        y = 98
+        a.append(path(pen.rrect(x, y, 36, 36, 8)))
+        a.append(path(pen.rrect(x + 5, y + 4, 26, 22, 5, wob=0.5), stroke_width="1.6"))
+        a.append(f'<text x="{x + 18}" y="{y + 20.5}" text-anchor="middle" font-size="12" font-weight="600" '
+                 f'fill="currentColor" stroke="none">{ch}</text>')
+    a.append(path(pen.star(114, 36, 16)))
+    for (x1, y1, x2, y2) in ((99, 47, 56, 70), (96, 38, 64, 54), (104, 55, 76, 78)):
+        a.append(path(pen.line(x1, y1, x2, y2)))
+    a.append(path(sparkle(26, 34, 6), stroke_width="2"))
+    a.append(f'<circle cx="52" cy="22" r="2.4" fill="currentColor" stroke="none"/>')
+    return "".join(a), [(pen.blob(114, 37, 21), c), (pen.blob(70, 120, 15), c)]
+
+
+def d_sunskip(pen, c):
+    import math
+    a = [path(pen.circle(38, 40, 15))]
+    for i in range(8):
+        ang = math.radians(i * 45 + 10)
+        a.append(path(pen.line(38 + 21 * math.cos(ang), 40 + 21 * math.sin(ang),
+                               38 + 28 * math.cos(ang), 40 + 28 * math.sin(ang), 0.3)))
+    a += [
+        path(pen.curve([(105, 141), (104, 124), (106, 106)])),
+        path(pen.curve([(105, 118), (96, 110)])),
+        path(pen.cloud(106, 78, 26)),
+        path(pen.curve([(8, 142), (75, 140), (146, 143)])),
+    ]
+    for x in range(80, 136, 8):
+        a.append(path(pen.line(x, 147, x + 6, 141, 0.2), stroke_width="1.6"))
+    a.append(path(pen.curve([(14, 126), (40, 116), (62, 124), (84, 136)]), stroke_dasharray="2 7"))
+    return "".join(a), [(pen.blob(38, 40, 24), c), (pen.blob(106, 79, 20, var=0.1), MINT)]
+
+
+def d_rehabit(pen, c):
+    a = [
+        path(pen.curve([(95, 98), (94, 82), (96, 64)])),
+        path("M95 80Q80 60 70 66Q76 82 95 80Z"),
+        path("M96 70Q110 50 122 54Q118 72 96 70Z"),
+        path(pen.poly([(69, 108), (121, 108), (114, 142), (76, 142)])),
+        path(pen.rrect(63, 97, 64, 12, 4)),
+        f'<circle cx="86" cy="122" r="2.6" fill="currentColor" stroke="none"/>',
+        f'<circle cx="104" cy="122" r="2.6" fill="currentColor" stroke="none"/>',
+        path(pen.curve([(89, 129), (95, 134), (101, 129)])),
+    ]
+    for cx, cy, r in ((24, 120, 9), (38, 92, 8), (22, 66, 7)):
+        a.append(path(pen.circle(cx, cy, r)))
+    for x1, y1, x2, y2 in ((50, 84, 56, 80), (51, 93, 58, 93), (50, 102, 56, 106)):
+        a.append(path(pen.line(x1, y1, x2, y2, 0.2), stroke_width="2"))
+    return "".join(a), [(pen.blob(95, 124, 26), c), (pen.blob(38, 92, 11, var=0.08), c)]
+
+
+def d_now_ai(pen, c):
+    a = [
+        path(pen.curve([(56, 74), (57, 50), (74, 44), (91, 50), (92, 74)])),
+        path(pen.poly([(34, 72), (114, 72), (120, 142), (28, 142)])),
+        path(sparkle(74, 106, 12)),
+        path(sparkle(96, 88, 5), stroke_width="1.8"),
+        path(pen.rrect(96, 8, 48, 34, 11)),
+        path(pen.poly([(106, 41), (102, 54), (117, 41)], closed=False)),
+    ]
+    for x, hh in ((109, 6), (116, 12), (123, 8), (130, 4)):
+        a.append(path(pen.line(x, 25 - hh, x, 25 + hh, 0.2)))
+    return "".join(a), [(pen.blob(74, 108, 30), c), (pen.blob(120, 25, 15, var=0.08), c)]
+
+
+DOODLES = {
+    "regtree": d_regtree,
+    "tripwire": d_tripwire,
+    "starfall-race": d_starfall,
+    "sunskip": d_sunskip,
+    "rehabit": d_rehabit,
+    "now-ai": d_now_ai,
+}
 
 
 # ----------------------------------------------------------------------------
-# Hero
+# Banner
 # ----------------------------------------------------------------------------
-
-def ellipse_path(rx, ry):
-    return f"M{rx},0 A{rx},{ry} 0 1,1 {-rx},0 A{rx},{ry} 0 1,1 {rx},0 Z"
-
 
 def build_hero():
-    w, h = 1000, 360
-    cx, cy, tilt = 780, 190, -18
-    ratio = 0.36
-    rings = [110, 200, 300, 410]
-
-    rnd = random.Random(11)
-    stars = []
-    for _ in range(46):
-        x, y = rnd.uniform(12, w - 12), rnd.uniform(12, h - 12)
-        r = rnd.choice([0.6, 0.8, 1.0, 1.3])
-        o = rnd.uniform(0.25, 0.75)
-        dur, delay = rnd.uniform(3, 8), rnd.uniform(0, 6)
-        stars.append(
-            f'<circle class="tw" cx="{x:.1f}" cy="{y:.1f}" r="{r}" fill="#fff" opacity="{o:.2f}" '
-            f'style="animation-duration:{dur:.1f}s;animation-delay:{delay:.1f}s"/>'
-        )
-
-    ring_svg = "".join(
-        f'<ellipse rx="{r}" ry="{r*ratio:.1f}" fill="none" stroke="{LINE}" stroke-width="1"/>'
-        for r in rings
+    png = os.path.join(OUT_DIR, "hero.png")
+    w, h = 2019, 779  # hero.png's size
+    b64 = base64.b64encode(open(png, "rb").read()).decode()
+    # two steam wisps above the mug; each rises and fades, the second half a cycle later
+    wisps = "".join(
+        f'<g transform="translate({x} 520)"><path class="steam" style="animation-delay:{d}s" '
+        f'd="M0 0C-6 -6 6 -12 0 -18C-6 -24 6 -30 0 -36"/></g>'
+        for x, d in ((1834, 0), (1861, 1.5))
     )
-
-    # (ring index, colour, radius, seconds per orbit, phase 0..1)
-    planets = [
-        (0, "#ededed", 2.6, 26, 0.10),
-        (1, "#0070f3", 5.0, 48, 0.62),
-        (2, "#ff0080", 4.0, 80, 0.30),
-        (2, "#50e3c2", 2.4, 80, 0.86),
-        (3, "#7928ca", 5.5, 130, 0.05),
-    ]
-    planet_svg = []
-    for ri, col, pr, dur, phase in planets:
-        r = rings[ri]
-        d = ellipse_path(r, r * ratio)
-        planet_svg.append(
-            f'<g><circle r="{pr*3.4:.1f}" fill="url(#g-{col[1:]})"/><circle r="{pr}" fill="{col}"/>'
-            f'<animateMotion dur="{dur}s" begin="{-dur*phase:.1f}s" repeatCount="indefinite" path="{d}"/></g>'
-        )
-
-    glow_defs = "".join(
-        f'<radialGradient id="g-{c[1:]}"><stop offset="0" stop-color="{c}" stop-opacity=".55"/>'
-        f'<stop offset="1" stop-color="{c}" stop-opacity="0"/></radialGradient>'
-        for c in ("#ededed", "#0070f3", "#ff0080", "#50e3c2", "#7928ca")
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" '
+        f'role="img" aria-label="Dhruv Honwad, Full Stack AI Engineer">'
+        "<style>"
+        ".steam{fill:none;stroke:#f9f8f9;stroke-width:3.6;stroke-linecap:round;opacity:0;"
+        "animation:rise 3s ease-in-out infinite;}"
+        "@keyframes rise{0%{opacity:0;transform:translateY(8px);}30%{opacity:.95;}"
+        "100%{opacity:0;transform:translateY(-18px);}}"
+        "@media (prefers-reduced-motion:reduce){.steam{animation:none;opacity:.9;}}"
+        "</style>"
+        f'<image href="data:image/png;base64,{b64}" width="{w}" height="{h}"/>'
+        f"{wisps}</svg>\n"
     )
-
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" role="img" aria-label="{esc(NAME)}, {esc(TITLE)}">
-  <style>
-    {FONTS}
-    text {{ font-family: {FONT_STACK}; }}
-    .tw {{ animation: tw ease-in-out infinite; }}
-    @keyframes tw {{ 0%,100% {{ opacity: .12; }} 50% {{ opacity: .9; }} }}
-    @media (prefers-reduced-motion: reduce) {{ .tw {{ animation: none; }} }}
-  </style>
-  <defs>
-    {glow_defs}
-    <radialGradient id="neb-b"><stop offset="0" stop-color="#0070f3" stop-opacity=".20"/><stop offset="1" stop-color="#0070f3" stop-opacity="0"/></radialGradient>
-    <radialGradient id="neb-v"><stop offset="0" stop-color="#7928ca" stop-opacity=".22"/><stop offset="1" stop-color="#7928ca" stop-opacity="0"/></radialGradient>
-    <radialGradient id="neb-p"><stop offset="0" stop-color="#ff0080" stop-opacity=".14"/><stop offset="1" stop-color="#ff0080" stop-opacity="0"/></radialGradient>
-    <radialGradient id="sun"><stop offset="0" stop-color="#fff" stop-opacity="1"/><stop offset=".08" stop-color="#fff" stop-opacity=".9"/><stop offset=".22" stop-color="#fff" stop-opacity=".18"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
-    <linearGradient id="fade" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="{VOID}" stop-opacity="1"/>
-      <stop offset=".42" stop-color="{VOID}" stop-opacity=".92"/>
-      <stop offset=".66" stop-color="{VOID}" stop-opacity="0"/>
-    </linearGradient>
-    <clipPath id="clip"><rect width="{w}" height="{h}" rx="12"/></clipPath>
-  </defs>
-
-  <g clip-path="url(#clip)">
-    <rect width="{w}" height="{h}" fill="{VOID}"/>
-    <ellipse cx="{cx-70}" cy="{cy+30}" rx="330" ry="210" fill="url(#neb-v)"/>
-    <ellipse cx="{cx+60}" cy="{cy-40}" rx="300" ry="170" fill="url(#neb-b)"/>
-    <ellipse cx="{cx+20}" cy="{cy+90}" rx="220" ry="120" fill="url(#neb-p)"/>
-    {''.join(stars)}
-    <g transform="translate({cx} {cy}) rotate({tilt})">
-      {ring_svg}
-      <circle r="64" fill="url(#sun)"/>
-      {''.join(planet_svg)}
-    </g>
-    <rect width="{w}" height="{h}" fill="url(#fade)"/>
-  </g>
-  <rect x=".5" y=".5" width="{w-1}" height="{h-1}" rx="11.5" fill="none" stroke="{LINE}"/>
-
-  <text x="56" y="168" font-size="64" font-weight="600" letter-spacing="-2.6" fill="{TEXT}">{esc(NAME)}</text>
-  <text x="58" y="214" font-size="22" font-weight="400" fill="{TEXT}">{esc(TITLE)}</text>
-  <text x="58" y="250" font-size="16" font-weight="400" fill="{MUTED}">{esc(TAGLINE)}</text>
-</svg>
-"""
 
 
 # ----------------------------------------------------------------------------
 # Cards
 # ----------------------------------------------------------------------------
 
-def build_card(p, accent, wide=False):
-    w, h = (1000, 224) if wide else (490, 236)
-    pad = 28
+def build_card(p, accent):
+    w, h = 490, 290
+    pad = 26
+    pen = Pen(p["slug"])
 
-    # corner orbit motif, centred just outside the top-right corner
-    ox, oy = w + 6, -6
-    arcs = "".join(
-        f'<circle cx="{ox}" cy="{oy}" r="{r}" fill="none" stroke="{LINE}" stroke-width="1"/>'
-        for r in (58, 94, 130)
-    )
-    import math
-    ang = math.radians(146)
-    px, py = ox + 94 * math.cos(ang), oy + 94 * math.sin(ang)
-    ang2 = math.radians(112)
-    qx, qy = ox + 58 * math.cos(ang2), oy + 58 * math.sin(ang2)
-    ang3 = math.radians(162)
-    sx, sy = ox + 130 * math.cos(ang3), oy + 130 * math.sin(ang3)
-
-    lines = textwrap.wrap(p["desc"], width=96 if wide else 54)[:3]
-    if len(lines) > 2:
-        print(f"Warning: description for '{p['title']}' wraps to {len(lines)} lines; shorten it so it does not crowd the tags.")
+    lines = textwrap.wrap(p["desc"], width=37)
+    if len(lines) > 3:
+        print(f"Warning: description for '{p['title']}' wraps to {len(lines)} lines; shorten it so it fits.")
     desc = "".join(
-        f'<text x="{pad}" y="{124 + i*22}" font-size="15" fill="{MUTED}">{esc(l)}</text>'
-        for i, l in enumerate(lines)
+        f'<text x="{pad}" y="{136 + i * 21}" font-size="14" fill="{MUTED}">{esc(l)}</text>'
+        for i, l in enumerate(lines[:3])
     )
 
-    x, y = pad, h - 58
+    # "kind" sticker, plus an optional live badge
+    kw = text_width(p["kind"], 12, bold=True) + 24
+    sticker = (
+        path(pen.rrect(pad, 24, kw, 26, 13, wob=0.6), fill=accent, fill_opacity=".14", stroke=accent,
+             stroke_width="1.6")
+        + f'<text x="{pad + kw / 2:.1f}" y="41.5" text-anchor="middle" font-size="12" font-weight="600" '
+          f'fill="{accent}">{esc(p["kind"])}</text>'
+    )
+    if p.get("live"):
+        lx = pad + kw + 10
+        sticker += (
+            f'<circle class="tw" cx="{lx + 8:.1f}" cy="37" r="4" fill="{MINT}"/>'
+            f'<text x="{lx + 18:.1f}" y="41.5" font-size="12" font-weight="600" fill="{MINT}">live</text>'
+        )
+
+    title = (
+        f'<text x="{pad}" y="94" font-size="30" font-weight="600" letter-spacing="-.5" fill="{INK}">'
+        f'{esc(p["title"])}</text>'
+        + path(pen.squiggle(pad + 1, pad + 64, 108, amp=2.4, step=8), fill="none", stroke=accent,
+               stroke_width="2.4", stroke_linecap="round")
+    )
+
+    x, y = pad, h - 56
     pills = []
     for tag in p["tags"][:5]:
-        pw = len(tag) * 6.9 + 26
+        pw = text_width(tag, 12) + 24
         pills.append(
-            f'<rect x="{x:.1f}" y="{y}" width="{pw:.1f}" height="28" rx="14" fill="#0a0a0a" stroke="{LINE}"/>'
-            f'<text x="{x+pw/2:.1f}" y="{y+18.5}" text-anchor="middle" font-size="12.5" fill="{TEXT}">{esc(tag)}</text>'
+            path(pen.rrect(x, y, pw, 28, 14, wob=0.6), fill=PILL, stroke=BORDER, stroke_width="1.6")
+            + f'<text x="{x + pw / 2:.1f}" y="{y + 18.5}" text-anchor="middle" font-size="12" fill="{INK}">'
+              f'{esc(tag)}</text>'
         )
         x += pw + 8
+    if x > w - pad + 8:
+        print(f"Warning: tags for '{p['title']}' overflow the card; drop one.")
 
-    kind_w = len(p["kind"]) * 7.2
-    live = ""
-    if p.get("live"):
-        lx = pad + kind_w + 14
-        live = (
-            f'<rect x="{lx:.1f}" y="24" width="52" height="22" rx="11" fill="#001a14" stroke="#0b3d31"/>'
-            f'<circle cx="{lx+14:.1f}" cy="35" r="3.2" fill="{GREEN}"/>'
-            f'<text x="{lx+23:.1f}" y="39.2" font-size="12" fill="{TEXT}">Live</text>'
-        )
+    art, blobs = DOODLES[p["slug"]](pen, accent)
+    doodle = inked("art", art, blobs, transform="translate(326 44) scale(.96)")
 
-    acc_id = accent[1:]
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" role="img" aria-label="{esc(p['title'])}">
-  <style>
-    {FONTS}
-    text {{ font-family: {FONT_STACK}; }}
-  </style>
-  <defs>
-    <radialGradient id="a-{acc_id}"><stop offset="0" stop-color="{accent}" stop-opacity=".6"/><stop offset="1" stop-color="{accent}" stop-opacity="0"/></radialGradient>
-    <clipPath id="c"><rect width="{w}" height="{h}" rx="10"/></clipPath>
-  </defs>
-  <g clip-path="url(#c)">
-    <rect width="{w}" height="{h}" fill="{VOID}"/>
-    {arcs}
-    <circle cx="{sx:.1f}" cy="{sy:.1f}" r="1.6" fill="{MUTED}"/>
-    <circle cx="{qx:.1f}" cy="{qy:.1f}" r="2.2" fill="{TEXT}"/>
-    <circle cx="{px:.1f}" cy="{py:.1f}" r="16" fill="url(#a-{acc_id})"/>
-    <circle cx="{px:.1f}" cy="{py:.1f}" r="4.6" fill="{accent}"/>
-  </g>
-  <rect x=".5" y=".5" width="{w-1}" height="{h-1}" rx="9.5" fill="none" stroke="{LINE}"/>
-  <text x="{pad}" y="40" font-size="13" fill="{MUTED}">{esc(p['kind'])}</text>
-  {live}
-  <text x="{pad}" y="88" font-size="30" font-weight="600" letter-spacing="-1.1" fill="{TEXT}">{esc(p['title'])}</text>
-  {desc}
-  {''.join(pills)}
-</svg>
-"""
+    return (
+        svg_open(w, h, f"{p['title']}: {p['desc']}") + style_block() + paper(w, h, p["slug"] + "-page")
+        + '<g clip-path="url(#page)">' + doodle + sticker + title + desc + "".join(pills) + "</g></svg>\n"
+    )
+
+
+# ----------------------------------------------------------------------------
+# Section headers and the README grid
+# ----------------------------------------------------------------------------
+
+def build_header(text, accent):
+    w, h = 1000, 72
+    pen = Pen(text)
+    tw = text_width(text, 28, bold=True)
+    return (
+        svg_open(w, h, text) + style_block()
+        + path(sparkle(20, 34, 11), fill=accent)
+        + f'<text x="44" y="45" font-size="28" font-weight="600" letter-spacing="-.3" fill="{INK}">{esc(text)}</text>'
+        + path(pen.squiggle(46, 46 + min(tw, 260) * 0.55, 61, amp=2.6, step=9), fill="none", stroke=accent,
+               stroke_width="3", stroke_linecap="round")
+        + "</svg>\n"
+    )
 
 
 def build_grid():
     rows = []
-    n = len(PROJECTS)
-    for i in range(0, n, 2):
-        chunk = PROJECTS[i:i + 2]
-        span = ' colspan="2"' if len(chunk) == 1 else ' width="50%"'
+    for i in range(0, len(PROJECTS), 2):
         cells = []
-        for p in chunk:
+        for p in PROJECTS[i:i + 2]:
             img = f'<img src="assets/cards/{p["slug"]}.svg" alt="{esc(p["title"])}" width="100%"/>'
             body = f'<a href="{p["url"]}">{img}</a>' if p.get("url") else img
-            cells.append(
-                f'    <td{span}>\n'
-                f'      {body}\n'
-                f'    </td>'
-            )
+            cells.append(f'    <td width="50%">\n      {body}\n    </td>')
         rows.append("  <tr>\n" + "\n".join(cells) + "\n  </tr>")
     return "<table>\n" + "\n".join(rows) + "\n</table>\n"
 
 
+def write(rel, text):
+    full = os.path.join(OUT_DIR, rel)
+    os.makedirs(os.path.dirname(full), exist_ok=True)
+    with open(full, "w", encoding="utf-8", newline="\n") as f:
+        f.write(text)
+
+
 def main():
-    os.makedirs(os.path.join(OUT_DIR, "cards"), exist_ok=True)
-    open(os.path.join(OUT_DIR, "hero.svg"), "w", encoding="utf-8").write(build_hero())
+    if len(PROJECTS) % 2:
+        print("Note: an odd number of projects leaves the last grid row half empty.")
+    write("hero.svg", build_hero())
     for i, p in enumerate(PROJECTS):
-        wide = (len(PROJECTS) % 2 == 1 and i == len(PROJECTS) - 1)
-        svg = build_card(p, ACCENTS[i % len(ACCENTS)], wide)
-        open(os.path.join(OUT_DIR, "cards", f'{p["slug"]}.svg'), "w", encoding="utf-8").write(svg)
-    open(os.path.join(OUT_DIR, "projects-grid.md"), "w", encoding="utf-8").write(build_grid())
-    print(f"Wrote hero.svg and {len(PROJECTS)} cards to {OUT_DIR}")
-    if not FONTS:
-        print("Note: fonts/ not found, using system fonts instead of Geist.")
+        write(f'cards/{p["slug"]}.svg', build_card(p, ACCENTS[i % len(ACCENTS)]))
+    for slug, text, accent in HEADERS:
+        write(f"headers/{slug}.svg", build_header(text, accent))
+    write("projects-grid.md", build_grid())
+    print(f"Wrote hero.svg, {len(PROJECTS)} cards and {len(HEADERS)} headers to {OUT_DIR}")
 
 
 if __name__ == "__main__":
